@@ -52,7 +52,6 @@ class PhotoListViewController: UIViewController {
 		switch scrollDirection {
 		case .horizontal:
 			photoListView.backButton.isHidden = false
-			photoListView.backButton.tintColor = UIColor(hexString: photos[indexPath.row].color).inverted
 			let width = photoListView.frame.width
 			let height = photoListView.collectionview.frame.height - (photoListView.collectionview.adjustedContentInset.top + photoListView.collectionview.adjustedContentInset.bottom)
 			collectionViewLayout.itemSize = CGSize(width: width, height: height)
@@ -98,6 +97,10 @@ extension PhotoListViewController: UICollectionViewDataSource {
 		return cell
 	}
 	
+	func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+		photoListView.backButton.tintColor = UIColor(hexString: photos[indexPath.row].color).inverted
+	}
+	
 }
 
 
@@ -105,9 +108,19 @@ extension PhotoListViewController: UICollectionViewDataSource {
 extension PhotoListViewController: UICollectionViewDelegateFlowLayout {
 	
 	func scrollViewDidScroll(_ scrollView: UIScrollView) {
-		let actualPosition = scrollView.contentOffset.y
-		let contentHeight = scrollView.contentSize.height - scrollView.frame.size.height
-		if contentHeight > 0 && contentHeight - actualPosition <= 20 {
+		let direction = collectionViewLayout.scrollDirection
+		let offsetContentLength: CGFloat
+		let remainingContentLength: CGFloat
+		switch direction {
+		case .horizontal:
+			offsetContentLength = scrollView.contentOffset.x
+			remainingContentLength = scrollView.contentSize.width - scrollView.frame.size.width
+		default:
+			offsetContentLength = scrollView.contentOffset.y
+			remainingContentLength = scrollView.contentSize.height - scrollView.frame.size.height
+		}
+		
+		if remainingContentLength > 0 && remainingContentLength - offsetContentLength <= 20 {
 			interactor?.fetchPhotosPage()
 		}
 	}
